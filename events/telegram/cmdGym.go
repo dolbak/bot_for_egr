@@ -82,6 +82,7 @@ func (p *TelProcessor) addWeightInExercise(chatID int, repetitions string) error
 	return p.tg.SendMessage(chatID, "Сколько кг?")
 }
 
+// fsdgsfdh
 // Сохранение упражнения, возможность добавить еще одно или написать комментарий к тренировке
 func (p *TelProcessor) saveExerciseInfo(chatID int) error {
 	botState := events.WorkoutIsCreated
