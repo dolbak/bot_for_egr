@@ -35,16 +35,18 @@ const (
 	AskNumberOfSets
 	AskNumberOfRepetitions
 	AskWeightInExercise
+	AskTime
+	AskAnotherExercise
+	AskCommentToWorkout
 	WorkoutIsCreated
-	AskDescriptionOfWorkout
 	AskNameOfNewExercise
-	AskRecommendation
-	AskNameOfExercise
 	AskDescriptionOfExercise
-	AskCommentOfExercise
-	AskTrainingComment
-
-
+	ExerciseIdCreated
+	AskCommentToExercise
+	AskRecommendation
+	AskTypeOfWorkout
+	AskComplexityOfExercise
+	SendRecommendation
 )
 
 type Weekdays string

@@ -36,13 +36,14 @@ func (p *TelProcessor) chooseWorkout(chatID int, day string) error {
 	var addNew = telegram.NewInlineKeyboardButtonData("Создать новую", "/workout")
 	var row = telegram.NewInlineKeyboardRow(addNew)
 	var keyboard = telegram.NewInlineKeyboardMarkup(row)
-	return p.tg.SendMessageWithKeyBoard(chatID, "Вы выбрали: "+day+"\nВыберите тренировку или создайте новую.\n "+
-		"(полагаю, тут нужно предоставить нумерованный  список тренировок, чел отправляет цифру нужного)"+
+	return p.tg.SendMessageWithKeyBoard(chatID, "Вы выбрали: "+day+"\nВведите цифру нужной вам тренировки или создайте новую.\n "+
 		"\n1. Тренировка 1"+
 		"\n2. Тренировка 2...", keyboard)
 }
 
 func (p *TelProcessor) savePlan(chatID int, workout string) error {
+	botState := events.WaitingForSomething
+	storage.UpdateUserState(chatID, botState)
 	//Тут должно быть сохранение планирования
 	return p.tg.SendMessage(chatID, "Вы запланировали тренировку")
 }
@@ -56,7 +57,7 @@ func (p *TelProcessor) chooseExercise(chatID int) error {
 	var recommendation = telegram.NewInlineKeyboardButtonData("Рекомендации", "/recommendation")
 	var row = telegram.NewInlineKeyboardRow(addNew, recommendation)
 	var keyboard = telegram.NewInlineKeyboardMarkup(row)
-	return p.tg.SendMessageWithKeyBoard(chatID, "\nВыберите упражнение или создайте новое.\n (полагаю, тут нужно предоставить список упражнений, чел отправляет цифру нужного)"+
+	return p.tg.SendMessageWithKeyBoard(chatID, "\nВведите цифру нужного вам упражнения или создайте новое.\n"+
 		"\n1.Упражнение 1 \n2.Упражнение 2", keyboard)
 }
 
@@ -76,23 +77,42 @@ func (p *TelProcessor) addRepetitions(chatID int, numberOfSets string) error {
 }
 
 func (p *TelProcessor) addWeightInExercise(chatID int, repetitions string) error {
-	botState := events.AskDescriptionOfWorkout
+	botState := events.AskTime
 	storage.UpdateUserState(chatID, botState)
 	//Тут должно быть сохранение(кэширование) количества пвторов
 	return p.tg.SendMessage(chatID, "Сколько кг?")
 }
 
-// fsdgsfdh
-// Сохранение упражнения, возможность добавить еще одно или написать комментарий к тренировке
-func (p *TelProcessor) saveExerciseInfo(chatID int) error {
-	botState := events.WorkoutIsCreated
+func (p *TelProcessor) addTime(chatID int, weight string) error {
+	botState := events.AskCommentToExercise
+	storage.UpdateUserState(chatID, botState)
+	//Тут должно быть кэширование веса
+	return p.tg.SendMessage(chatID, "Введите время выполнения упражнения")
+}
+func (p *TelProcessor) addCommentToExercise(chatID int, time string) error {
+	botState := events.AskAnotherExercise
+	storage.UpdateUserState(chatID, botState)
+	//Тут должно быть кэширование веса
+	return p.tg.SendMessage(chatID, "Введите комментарий к упражнению")
+}
+
+// Сохранение упражнения
+func (p *TelProcessor) saveExerciseInfo(chatID int, comment string) error {
+	botState := events.AskCommentToWorkout
 	storage.UpdateUserState(chatID, botState)
 	//Тут должно быть сохранение инфы по упражнению в тренировку
 
 	var addNew = telegram.NewInlineKeyboardButtonData("Добавить еще", "/workout")
-	var row = telegram.NewInlineKeyboardRow(addNew)
+	var not = telegram.NewInlineKeyboardButtonData("Нет", "_")
+	var row = telegram.NewInlineKeyboardRow(addNew, not)
 	var keyboard = telegram.NewInlineKeyboardMarkup(row)
-	return p.tg.SendMessageWithKeyBoard(chatID, "Вы добавили упражнение в тренировку. Напишите комментарий к тренировке", keyboard)
+	return p.tg.SendMessageWithKeyBoard(chatID, "Хотите добавить еще упражнение?", keyboard)
+}
+
+func (p *TelProcessor) addCommentToWorkout(chatID int) error {
+	botState := events.WorkoutIsCreated
+	storage.UpdateUserState(chatID, botState)
+	return p.tg.SendMessage(chatID, "Введите комментарий к тренировке")
 }
 
 func (p *TelProcessor) saveNewWorkout(chatID int) error {
@@ -102,21 +122,76 @@ func (p *TelProcessor) saveNewWorkout(chatID int) error {
 	return p.tg.SendMessage(chatID, "Вы создали тренировку.")
 }
 
+func (p *TelProcessor) createNewExercise(chatID int) error {
+	botState := events.AskDescriptionOfExercise
+	storage.UpdateUserState(chatID, botState)
+	return p.tg.SendMessage(chatID, "Введите название упражнения")
+}
+
+func (p *TelProcessor) addDescriptionOfExercise(chatID int, name string) error {
+	botState := events.ExerciseIdCreated
+	storage.UpdateUserState(chatID, botState)
+	//должно быть кэширование названия
+	return p.tg.SendMessage(chatID, "Введите описание упражнения")
+}
+
+func (p *TelProcessor) SaveNewExercise(chatID int, description string) error {
+	botState := events.AskNumberOfSets
+	storage.UpdateUserState(chatID, botState)
+	var addInfo = telegram.NewInlineKeyboardButtonData("Добавить информацию", "_")
+	var row = telegram.NewInlineKeyboardRow(addInfo)
+	var keyboard = telegram.NewInlineKeyboardMarkup(row)
+	//Сохранение упражнения, получение его ID
+	return p.tg.SendMessageWithKeyBoard(chatID, "Вы создали упражнение", keyboard)
+}
+
+func (p *TelProcessor) chooseMuscleGroup(chatID int) error {
+	botState := events.AskTypeOfWorkout
+	storage.UpdateUserState(chatID, botState)
+
+	var button1 = telegram.NewInlineKeyboardButtonData("Кнопки для выбора группы мышц", "_")
+	var row = telegram.NewInlineKeyboardRow(button1)
+	var keyboard = telegram.NewInlineKeyboardMarkup(row)
+
+	return p.tg.SendMessageWithKeyBoard(chatID, "Выберите группу мышц", keyboard)
+}
+
+func (p *TelProcessor) chooseTypeOfWorkout(chatID int, muscleGroup string) error {
+	botState := events.AskComplexityOfExercise
+	storage.UpdateUserState(chatID, botState)
+	//Тут должна кэшироваться группа мышц
+	var button1 = telegram.NewInlineKeyboardButtonData("Кнопки для выбора выбора типа тренировки", "_")
+	var row = telegram.NewInlineKeyboardRow(button1)
+	var keyboard = telegram.NewInlineKeyboardMarkup(row)
+
+	return p.tg.SendMessageWithKeyBoard(chatID, "Выберите тип тренировки", keyboard)
+}
+
+func (p *TelProcessor) chooseComplexity(chatID int, typeOfWorkout string) error {
+	botState := events.SendRecommendation
+	storage.UpdateUserState(chatID, botState)
+
+	//Тут должен кэшироваться тип тренировки
+	var button1 = telegram.NewInlineKeyboardButtonData("Кнопки для выбора сложности", "_")
+	var row = telegram.NewInlineKeyboardRow(button1)
+	var keyboard = telegram.NewInlineKeyboardMarkup(row)
+
+	return p.tg.SendMessageWithKeyBoard(chatID, "Выберите сложность", keyboard)
+}
+
+func (p *TelProcessor) getRecommendation(chatID int, complexity string) error {
+	botState := events.AskNumberOfSets
+	storage.UpdateUserState(chatID, botState)
+
+	//Тут должно выдаваться упражнение по предыдущим выборам
+	var button1 = telegram.NewInlineKeyboardButtonData("Хочу", "_")
+	var button2 = telegram.NewInlineKeyboardButtonData("Хочу получить другое", "/workout")
+	var row = telegram.NewInlineKeyboardRow(button1, button2)
+	var keyboard = telegram.NewInlineKeyboardMarkup(row)
+
+	return p.tg.SendMessageWithKeyBoard(chatID, "Ваше упражнение: ...\nХотите его добавить в тренировку?", keyboard)
+}
+
 func (p *TelProcessor) func1(chatID int) error {
 	return p.tg.SendMessage(chatID, "Вы создали упражнение")
-}
-
-/*func (p *TelProcessor) addTime(chatID int) error {
-	return p.tg.SendMessage(chatID, "Сколько времени на выполнение упражнения?")
-}*/
-
-func (p *TelProcessor) createExercise(chatID int) error {
-	return p.tg.SendMessage(chatID, "Вы создали упражнение")
-}
-
-func (p *TelProcessor) recommendations(chatId int) error {
-	p.tg.SendMessage(chatId, "Выберете день тренировки")
-	p.tg.SendMessage(chatId, "У вас уже есть тренировка на этот день. Хотите изменить ее?")
-	p.tg.SendMessage(chatId, "Хотите получить рекомендацию?")
-	return p.tg.SendMessage(chatId, "Готово")
 }

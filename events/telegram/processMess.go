@@ -69,10 +69,30 @@ func (p *TelProcessor) processState(state events.State, text string, ID int) err
 		return p.addRepetitions(ID, text)
 	case events.AskWeightInExercise:
 		return p.addWeightInExercise(ID, text)
-	case events.AskDescriptionOfWorkout:
-		return p.saveExerciseInfo(ID)
+	case events.AskTime:
+		return p.addTime(ID, text)
+	case events.AskCommentToExercise:
+		return p.addCommentToExercise(ID, text)
+	case events.AskAnotherExercise:
+		return p.saveExerciseInfo(ID, text)
+	case events.AskCommentToWorkout:
+		return p.addCommentToWorkout(ID)
 	case events.WorkoutIsCreated:
 		return p.saveNewWorkout(ID)
+	case events.AskNameOfNewExercise:
+		return p.createNewExercise(ID)
+	case events.AskDescriptionOfExercise:
+		return p.addDescriptionOfExercise(ID, text)
+	case events.ExerciseIdCreated:
+		return p.SaveNewExercise(ID, text)
+	case events.AskRecommendation:
+		return p.chooseMuscleGroup(ID)
+	case events.AskTypeOfWorkout:
+		return p.chooseTypeOfWorkout(ID, text)
+	case events.AskComplexityOfExercise:
+		return p.chooseComplexity(ID, text)
+	case events.SendRecommendation:
+		return p.getRecommendation(ID, text)
 	default:
 		botState := events.WaitingForSomething
 		storage.UpdateUserState(ID, botState)

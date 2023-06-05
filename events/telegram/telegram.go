@@ -34,7 +34,7 @@ func New(client *telegram.Client, storage files.Storage) *TelProcessor {
 	return &TelProcessor{
 		tg:      client,
 		storage: storage,
-	}
+		}
 }
 func (p *TelProcessor) Fetch(limit int) ([]events.Event, error) {
 	updates, err := p.tg.Updates(p.offset, limit)

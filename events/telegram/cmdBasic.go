@@ -12,9 +12,9 @@ func (p *TelProcessor) sendHello(chatID int) error {
 		"/start \n"+
 		"/help \n"+
 		"/plan позваляет запланировать тренировку\n"+
-		"/workout позволяет создать новую тренировку\n"+
-		"/exercise позволяет создать новое упражнение\n"+
-		"/recommendation получите новое упражнение")
+		"/workout позволяет создать новую тренировку\n")
+	//	"/exercise позволяет создать новое упражнение\n"+
+	//	"/recommendation получите новое упражнение")
 }
 
 func (p *TelProcessor) sendHelp(chatID int) error {
@@ -24,11 +24,11 @@ func (p *TelProcessor) sendHelp(chatID int) error {
 		"/start \n"+
 		"/help \n"+
 		"/plan позваляет запланировать тренировку\n"+
-		"/workout позволяет создать новую тренировку\n"+
-		"/exercise позволяет создать новое упражнение\n"+
-		"/recommendation получите новое упражнение")
+		"/workout позволяет создать новую тренировку\n")
+	//	"/exercise позволяет создать новое упражнение\n"+
+	//	"/recommendation получите новое упражнение")
 }
 
 func (p *TelProcessor) unidentifiedAction(chatID int) error {
-	return p.tg.SendMessage(chatID, "Неопознанное действие, введите команду из списка: \n/start \n/help \n/plan\n/workout\n/exercise\n/recommendation")
+	return p.tg.SendMessage(chatID, "Неопознанное действие, введите команду из списка: \n/start \n/help \n/plan\n/workout")
 }

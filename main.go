@@ -3,10 +3,11 @@ package main
 import (
 	"log"
 	event_consumer "myGoApp/consumer/event-consumer"
+	"myGoApp/storage/files"
 
 	tgClient "myGoApp/clients/telegram"
 	"myGoApp/events/telegram"
-	"myGoApp/storage/files"
+
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 func main() {
 
 	eventsProcessor := telegram.New(
-		tgClient.New(tgBotHost, "5689795126:AAG29KkNfZc2TTEaW3AwXUKUZsu2dT4tbUc"),
+		tgClient.New(tgBotHost, "5689795126:AAHBY1PfprRyNAWbVOyENpAydsi_x4awaMo"),
 		files.New(storagePath),
 	)
 
@@ -30,19 +31,3 @@ func main() {
 		log.Fatal("service is stopped", err)
 	}
 }
-
-/*func mustToken() string {
-	token := flag.String(
-		"tg-bot-token",
-		"",
-		"token for access to telegram bot",
-	)
-
-	flag.Parse()
-
-	if *token == "" {
-		log.Fatal("token is not specified")
-	}
-
-	return *token
-}*/
