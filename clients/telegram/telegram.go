@@ -10,6 +10,29 @@ import (
 	"strconv"
 )
 
+
+func NewInlineKeyboardButtonData(text, data string) InlineKeyboardButton {
+	return InlineKeyboardButton{
+		Text:         text,
+		CallbackData: &data,
+		}
+}
+func NewInlineKeyboardRow(buttons ...InlineKeyboardButton) []InlineKeyboardButton {
+	var row []InlineKeyboardButton
+
+	row = append(row, buttons...)
+
+	return row
+}
+func NewInlineKeyboardMarkup(rows ...[]InlineKeyboardButton) InlineKeyboardMarkup {
+	var keyboard [][]InlineKeyboardButton
+
+	keyboard = append(keyboard, rows...)
+
+	return InlineKeyboardMarkup{
+		InlineKeyboard: keyboard,
+		}
+}
 type Client struct {
 	host     string
 	basePath string
@@ -62,11 +85,13 @@ func (c *Client) SendMessage(chatID int, text string) error {
 	return nil
 }
 
-func (c *Client) SendMessage(chatID int, text string, keyboard InlineKeyboardMarkup) error {
+func (c *Client) SendMessageWithKeyBoard(chatID int, text string, keyboard InlineKeyboardMarkup) error {
 	q := url.Values{}
-		q.Add("chat_id", strconv.Itoa(chatID))
+	q.Add("chat_id", strconv.Itoa(chatID))
 	q.Add("text", text)
-	q.Add("reply_markup", keyboard)
+
+	k, _ := json.Marshal(keyboard)
+	q.Add("reply_markup", string(k))
 
 	_, err := c.doRequest("SendMessage", q)
 	if err != nil {

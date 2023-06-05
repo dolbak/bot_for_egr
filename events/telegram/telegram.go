@@ -15,9 +15,14 @@ type TelProcessor struct {
 	storage storage.Storage
 }
 
-type Meta struct {
+type MessageMeta struct {
 	ChatID   int
 	Username string
+}
+
+type CallbackMeta struct {
+	Data   string
+	ChatID int
 }
 
 var (
@@ -54,6 +59,8 @@ func (p *TelProcessor) Fetch(limit int) ([]events.Event, error) {
 
 func (p *TelProcessor) Process(event events.Event) error {
 	switch event.Type {
+	case events.CallbackQuery:
+		return p.processMessage(event)
 	case events.Message:
 		return p.processMessage(event)
 	default:
@@ -67,17 +74,17 @@ func (p *TelProcessor) processMessage(event events.Event) error {
 		return e.Wrap("can't process message", err)
 	}
 
-	if err := p.doCmd(event.Text, meta.ChatID, meta.Username); err != nil {
+	if err := p.processInputMessage(event.Text, meta.ChatID, meta.Username); err != nil {
 		return e.Wrap("can't process message", err)
 	}
 
 	return nil
 }
 
-func meta(event events.Event) (Meta, error) {
-	res, ok := event.Meta.(Meta)
+func meta(event events.Event) (MessageMeta, error) {
+	res, ok := event.Meta.(MessageMeta)
 	if !ok {
-		return Meta{}, e.Wrap("can't get meta", ErrUnknownMetaType)
+		return MessageMeta{}, e.Wrap("can't get meta", ErrUnknownMetaType)
 	}
 
 	return res, nil
@@ -89,9 +96,17 @@ func event(upd telegram.Update) events.Event {
 		Type: updType,
 		Text: fetchText(upd),
 	}
-
+	if updType == events.CallbackQuery {
+		res = events.Event{
+			Type: updType,
+			Text: upd.CallbackQuery.Data,
+		}
+		res.Meta = MessageMeta{
+			Username: upd.CallbackQuery.Message.From.Username,
+			ChatID:   upd.CallbackQuery.Message.Chat.ID}
+	}
 	if updType == events.Message {
-		res.Meta = Meta{
+		res.Meta = MessageMeta{
 			ChatID:   upd.Message.Chat.ID,
 			Username: upd.Message.From.Username}
 	}
@@ -105,10 +120,17 @@ func fetchText(upd telegram.Update) string {
 
 	return upd.Message.Text
 }
+func fetchCallbackQuery(upd telegram.Update) string {
+	if upd.CallbackQuery == nil {
+		return ""
+	}
 
+	return upd.CallbackQuery.Data
+}
 func fetchType(upd telegram.Update) events.Type {
+
 	if upd.Message == nil {
-		return events.Unknown
+		return events.CallbackQuery
 	}
 
 	return events.Message
